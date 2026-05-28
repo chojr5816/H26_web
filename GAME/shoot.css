@@ -1,0 +1,212 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    background-color: #111;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+h1 {
+    margin-bottom: 10px;
+    font-size: 24px;
+    text-shadow: 0 0 10px #00f3ff;
+}
+/* 게임 컨테이너 */
+#game-container {
+    position: relative;
+    width: 400px;
+    height: 600px;
+    background: linear-gradient(to bottom, #050510, #1a1a3a);
+    border: 4px solid #333;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+    overflow: hidden;
+}
+/* 상단 UI 정보창 */
+#ui-panel {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 10;
+    text-shadow: 1px 1px 2px black;
+}
+#ammo-display.reloading {
+    color: #ff3366;
+    animation: blink 0.5s infinite;
+}
+@keyframes blink {
+    50% { opacity: 0; }
+}
+/* 플레이어 비행기 */
+#player {
+    position: absolute;
+    bottom: 20px;
+    left: 180px; 
+    width: 40px;
+    height: 40px;
+    background-color: #00f3ff;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    box-shadow: 0 0 15px #00f3ff;
+}
+/* 플레이어 미사일 */
+.bullet {
+    position: absolute;
+    width: 4px;
+    height: 15px;
+    background-color: #ffff00;
+    box-shadow: 0 0 8px #ffff00;
+    border-radius: 2px;
+}
+
+/* ==========================================
+   [NEW] 적 기체 유형별 CSS 스타일 디자인
+   ========================================== */
+/* 1. 일반 적 소행성 (빨간색 원) */
+.enemy {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    background-color: #ff3366;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #ff3366;
+}
+/* 2. 기존 사격형 적 비행선 (황색 반원) */
+.enemy-shooter {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    background-color: #ffcc00;
+    border-radius: 50% 50% 0 0;
+    box-shadow: 0 0 10px #ffcc00;
+}
+/* 적 미사일 (보라색 구체) */
+.enemy-bullet {
+    position: absolute;
+    width: 6px;
+    height: 12px;
+    background-color: #ff00ff;
+    box-shadow: 0 0 8px #ff00ff;
+    border-radius: 50%;
+}
+/* 3. 지그재그 정찰기 (연두색 역삼각형) */
+.enemy-zigzag {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background-color: #33ff66;
+    clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+    box-shadow: 0 0 10px #33ff66;
+}
+/* 4. 탱커 대형 운석 (어두운 회색 큰 원) */
+.enemy-tanker {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    background-color: #666666;
+    border: 2px solid #999999;
+    border-radius: 50%;
+    box-shadow: 0 0 15px #444444;
+}
+/* 5. 분열형 클러스터 소행성 (오렌지색 마름모) */
+.enemy-cluster {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    background-color: #ff6600;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    box-shadow: 0 0 10px #ff6600;
+}
+/* 6. 최종 보스 (보라색 거대 중전함) */
+.enemy-boss {
+    position: absolute;
+    width: 160px;
+    height: 60px;
+    background-color: #9933ff;
+    border-radius: 0 0 30px 30px;
+    box-shadow: 0 0 30px #9933ff;
+    border: 3px solid #cc99ff;
+}
+
+/* 게임 오버 / 클리어 레이어 공통 */
+#game-over {
+    display: none; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    padding: 20px;
+}
+#game-over h2 {
+    color: #ff3366;
+    font-size: 36px;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+}
+/* 게임 클리어 전용 색상 디자인 */
+#game-over.clear h2 {
+    color: #00f3ff;
+    text-shadow: 0 0 15px #00f3ff;
+}
+#final-score {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #fff;
+}
+/* 랭킹 보드 스타일 */
+#ranking-board {
+    width: 80%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+#ranking-board h3 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #00f3ff;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+    padding-bottom: 5px;
+}
+.ranking-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0;
+    padding: 2px 5px;
+}
+.ranking-item.current {
+    background-color: rgba(0, 243, 255, 0.3);
+    font-weight: bold;
+    border-radius: 3px;
+}
+#restart-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #00f3ff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+#restart-btn:hover {
+    transform: scale(1.05);
+}

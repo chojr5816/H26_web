@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스페이스 슈터 - 최종 연동 버전</title>
+    <link rel="stylesheet" href="shoot.css">
+</head>
+<body>
+
+    <h1>SPACE SHOOTER AMMO</h1>
+    <div id="game-container">
+        <div id="ui-panel">
+            <div id="scoreboard">SCORE: <span id="score">0</span></div>
+            <div id="ammo-panel">AMMO: <span id="ammo-display">5 / 5</span></div>
+        </div>
+        
+        <div id="player"></div>
+        
+        <div id="game-over">
+            <h2>GAME OVER</h2>
+            <div id="final-score">최종 점수: 0 점</div>
+            
+            <div id="ranking-board">
+                <h3>🏆 TOP 5 RANKING</h3>
+                <div id="ranking-list"></div>
+            </div>
+
+            <button id="restart-btn" onclick="resetGame()">다시 시작</button>
+        </div>
+    </div>
+
+    <script src="shoot.js"></script>
+</body>
+</html>
