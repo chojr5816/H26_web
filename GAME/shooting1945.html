@@ -259,13 +259,73 @@
     letter-spacing: 1px;
   }
 
-  #mobileControls {
-    display: none;
-  }
+  #mobileControls { display: none; }
 
-  @media (max-width: 520px) {
-    #gameWrapper { transform: scale(0.85); transform-origin: top center; }
+  /* Pause overlay */
+  #pauseOverlay {
+    position: absolute; top: 40px; left: 0;
+    width: 480px; height: 640px;
+    display: none; flex-direction: column;
+    justify-content: center; align-items: center;
+    background: rgba(2,4,8,0.88); z-index: 200; gap: 22px;
   }
+  #pauseOverlay.active { display: flex; }
+
+  .pause-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 32px; font-weight: 900;
+    color: var(--neon-cyan); text-shadow: var(--glow-cyan); letter-spacing: 6px;
+  }
+  .pause-btns { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+
+  .btn-sm {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px; padding: 11px 24px; background: transparent;
+    border: 2px solid var(--neon-cyan); color: var(--neon-cyan); cursor: pointer;
+    letter-spacing: 2px; text-shadow: var(--glow-cyan);
+    box-shadow: 0 0 12px rgba(0,255,255,0.25);
+    transition: all 0.2s; border-radius: 2px; text-transform: uppercase;
+  }
+  .btn-sm:hover { background: rgba(0,255,255,0.1); box-shadow: var(--glow-cyan); transform: scale(1.05); }
+  .btn-sm.red { border-color: var(--neon-red); color: var(--neon-red); text-shadow: var(--glow-red); box-shadow: 0 0 12px rgba(255,34,68,0.25); }
+  .btn-sm.red:hover { background: rgba(255,34,68,0.1); box-shadow: var(--glow-red); }
+
+  /* 랭킹 모달 */
+  #rankingModal {
+    position: absolute; top: 40px; left: 0;
+    width: 480px; height: 640px;
+    display: none; flex-direction: column;
+    justify-content: center; align-items: center;
+    background: rgba(2,4,8,0.95); z-index: 300; gap: 16px;
+  }
+  #rankingModal.active { display: flex; }
+
+  .ranking-title {
+    font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 900;
+    color: var(--neon-yellow); text-shadow: var(--glow-yellow); letter-spacing: 4px;
+  }
+  .ranking-sep { width: 320px; height: 1px; background: linear-gradient(90deg, transparent, var(--neon-yellow), transparent); }
+  .ranking-table { width: 340px; border-collapse: collapse; }
+  .ranking-table tr { border-bottom: 1px solid rgba(0,255,255,0.12); }
+  .ranking-table td { padding: 11px 8px; font-size: 9px; color: white; letter-spacing: 1px; }
+  .ranking-table td:first-child { width: 44px; text-align: center; }
+  .ranking-table td:last-child  { text-align: right; color: var(--neon-yellow); }
+  .r1 td { color: #ffd700 !important; font-size: 10px; }
+  .r2 td:first-child { color: #c0c0c0 !important; }
+  .r3 td:first-child { color: #cd7f32 !important; }
+  .r-empty td { color: rgba(255,255,255,0.2) !important; }
+
+  /* HUD 버튼 그룹 */
+  #hudBtns { display: flex; gap: 6px; }
+  .hud-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 6px; padding: 4px 7px;
+    background: transparent; border: 1px solid rgba(0,255,255,0.35);
+    color: rgba(0,255,255,0.65); cursor: pointer; border-radius: 2px;
+    transition: all 0.18s; letter-spacing: 1px;
+  }
+  .hud-btn:hover { background: rgba(0,255,255,0.1); border-color: var(--neon-cyan); color: var(--neon-cyan); }
+
+  @media (max-width: 520px) { #gameWrapper { transform: scale(0.85); transform-origin: top center; } }
 </style>
 </head>
 <body>
@@ -293,6 +353,10 @@
       <span class="hud-label">STAGE</span>
       <span class="hud-value" id="stageVal">01</span>
     </div>
+    <div id="hudBtns">
+      <button class="hud-btn" id="pauseBtn" title="P키">⏸</button>
+      <button class="hud-btn" id="rankBtn" title="랭킹">🏆</button>
+    </div>
   </div>
 
   <!-- Canvas -->
@@ -300,6 +364,27 @@
 
   <!-- Scanline overlay -->
   <div class="scanline"></div>
+
+  <!-- Pause Overlay -->
+  <div id="pauseOverlay">
+    <div class="pause-title">PAUSED</div>
+    <div class="logo-line"></div>
+    <div class="pause-btns">
+      <button class="btn-sm" id="resumeBtn">▶ RESUME</button>
+      <button class="btn-sm" id="restartBtn">↺ RESTART</button>
+      <button class="btn-sm red" id="mainMenuBtn">⌂ MAIN MENU</button>
+    </div>
+    <div style="font-size:6px;color:rgba(0,255,255,0.4);letter-spacing:1px;margin-top:8px">P KEY TO RESUME</div>
+  </div>
+
+  <!-- Ranking Modal -->
+  <div id="rankingModal">
+    <div class="ranking-title">🏆 TOP 5 RANKING</div>
+    <div class="ranking-sep"></div>
+    <table class="ranking-table" id="rankingTable"></table>
+    <div class="ranking-sep"></div>
+    <button class="btn-sm" id="rankCloseBtn">CLOSE</button>
+  </div>
 
   <!-- Overlay -->
   <div id="overlay">
@@ -335,6 +420,7 @@ const H = canvas.height;
 let state = 'menu'; // menu | playing | paused | gameover | stageclear
 let score = 0;
 let hiScore = parseInt(localStorage.getItem('sf1945_hi') || '0');
+let rankings = JSON.parse(localStorage.getItem('sf1945_rankings') || '[]'); // [{score, stage, date}]
 let lives = 3;
 let stage = 1;
 let bombs = 3;
@@ -349,9 +435,12 @@ document.addEventListener('keydown', e => {
   keys[e.code] = true;
   if (state === 'playing') {
     if (e.code === 'KeyX' || e.code === 'KeyB') useBomb();
-    if (e.code === 'KeyP') togglePause();
   }
   if ((e.code === 'Space' || e.code === 'Enter') && state === 'menu') startGame();
+  if ((e.code === 'Escape' || e.code === 'KeyP') && (state === 'playing' || state === 'paused')) {
+    if (document.getElementById('rankingModal').classList.contains('active')) { hideRanking(); }
+    else togglePause();
+  }
   if ((e.code === 'Space' || e.code === 'Enter') && state === 'gameover') { state='menu'; showOverlay('menu'); }
   if (e.code === 'Space' && state === 'stageclear') nextStage();
   e.preventDefault();
@@ -909,8 +998,30 @@ function nextStage() {
 }
 
 function togglePause() {
-  if (state === 'playing') state = 'paused';
-  else if (state === 'paused') state = 'playing';
+  if (state === 'playing') {
+    state = 'paused';
+    document.getElementById('pauseOverlay').classList.add('active');
+  } else if (state === 'paused') {
+    state = 'playing';
+    document.getElementById('pauseOverlay').classList.remove('active');
+  }
+}
+
+function resumeGame() {
+  if (state !== 'paused') return;
+  state = 'playing';
+  document.getElementById('pauseOverlay').classList.remove('active');
+}
+
+function restartGame() {
+  document.getElementById('pauseOverlay').classList.remove('active');
+  startGame();
+}
+
+function goMainMenu() {
+  document.getElementById('pauseOverlay').classList.remove('active');
+  state = 'menu';
+  showOverlay('menu');
 }
 
 function playerDie() {
@@ -919,6 +1030,7 @@ function playerDie() {
   updateHUD();
   if (lives <= 0) {
     if (score > hiScore) { hiScore = score; localStorage.setItem('sf1945_hi', hiScore); }
+    saveRanking(score, stage);
     state = 'gameover';
     showOverlay('gameover');
   } else {
@@ -1275,6 +1387,46 @@ function draw() {
   }
 }
 
+// ─── Ranking ─────────────────────────────────────────────────
+function saveRanking(sc, stg) {
+  rankings.push({ score: sc, stage: stg, date: new Date().toLocaleDateString('ko-KR') });
+  rankings.sort((a,b) => b.score - a.score);
+  rankings = rankings.slice(0, 5);
+  localStorage.setItem('sf1945_rankings', JSON.stringify(rankings));
+}
+
+function showRanking() {
+  const modal = document.getElementById('rankingModal');
+  const table = document.getElementById('rankingTable');
+  const medals = ['🥇','🥈','🥉','4','5'];
+  const rankClass = ['r1','r2','r3','',''];
+  let html = '';
+  for (let i = 0; i < 5; i++) {
+    const r = rankings[i];
+    const cls = rankClass[i];
+    if (r) {
+      html += `<tr class="${cls}"><td>${medals[i]}</td><td>STAGE ${String(r.stage).padStart(2,'0')}</td><td>${r.date}</td><td>${String(r.score).padStart(6,'0')}</td></tr>`;
+    } else {
+      html += `<tr class="r-empty"><td>${i+1}</td><td>---</td><td>---</td><td>------</td></tr>`;
+    }
+  }
+  table.innerHTML = html;
+  modal.classList.add('active');
+  // 게임 중이면 일시정지
+  if (state === 'playing') {
+    state = 'paused';
+    document.getElementById('pauseOverlay').classList.remove('active');
+  }
+}
+
+function hideRanking() {
+  document.getElementById('rankingModal').classList.remove('active');
+  // 일시정지 상태였으면 폴즈 화면 복원
+  if (state === 'paused') {
+    document.getElementById('pauseOverlay').classList.add('active');
+  }
+}
+
 // ─── Loop ────────────────────────────────────────────────────
 function loop() {
   update();
@@ -1283,6 +1435,14 @@ function loop() {
 }
 
 // ─── Events ──────────────────────────────────────────────────
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  if (state === 'playing' || state === 'paused') togglePause();
+});
+document.getElementById('resumeBtn').addEventListener('click', resumeGame);
+document.getElementById('restartBtn').addEventListener('click', restartGame);
+document.getElementById('mainMenuBtn').addEventListener('click', goMainMenu);
+document.getElementById('rankBtn').addEventListener('click', showRanking);
+document.getElementById('rankCloseBtn').addEventListener('click', hideRanking);
 document.getElementById('startBtn').addEventListener('click', () => {
   if (state === 'menu') startGame();
   else if (state === 'gameover') { state='menu'; showOverlay('menu'); setTimeout(startGame,50); }
